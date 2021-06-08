@@ -1,0 +1,164 @@
+--------
+pandas : 주로 데이터셋을 입력받고, 전처리하는 데 쓰이는 라이브러리
+alias = pd
+
+## 입력
+# pd.read_excel()
+
+# 아규먼트의 자료형은 문자열이고, 해당 경로의 엑셀파일을 읽어서 source에 저장
+source=pd.read_excel('경로')
+
+## 전처리
+# pd.get_dummies()
+
+# 아규먼트로 데이터셋을 받고, Yes/No부터 red, yellow,grenn 등의 범주형 자료값을 0~n으로 인코딩
+Encoded_source= pd.get_dummies(source, drop_first=True)
+
+# 여기서 drop_first는,특히 서로 배타적인 범주일때, Yes/No마다 0~1/0~1이 아니라, 간편히 Yes에서 0~1인지만 표현하게 설정
+# https://hongl.tistory.com/89
+
+
+## 조회
+# pandas로 처리된 인스턴스의 메소드.head()
+
+# row 5개 출력
+Encoded_source.head()
+
+--------
+seaborn : 주로 데이터셋을 도표화하는 라이브러리
+alias sns
+
+# n*m개의 yx 좌표개 표현 ; n개의 독립변수와 m개의 종속변수_자기자신과 매칭되면 그냥 빈도
+# sns.pairplot()
+
+# 아규먼트 data가 데이터셋, x_vars가 독립변수들 선택(default는 전체임), y_vars가 종속변수들 선택(default는 전체임),
+# height는 좌표계의 높이이고 단위는 인치, 그리고 가로의 길이는 aspect(주로 0~1사이)를 height에 곱해서 도출
+# kind는 추가로 좌표계에 표시할 함수 혹은 어림곡선, 여기선 regression
+sns.pairplot(data=Default_enc, x_vars=['balance','income','student_Yes'], y_vars=['default_Yes'], height=6, aspect=0.8, kind='reg')
+
+###########################################
+!!!!!!!!!! lm ; Linear Model 만드는 부분  by statsmodel.formula.api 한편, sklearn에도 linear_model 라이브러리로 LinearModel 생성가능
+근데 선형회귀 모델의 정확성을 MSE을 통해 판별은 해도, 예측은 못하는듯함.
+###########################################
+statsmodel.formula.api ; seaborn과 별개로 수치를 도출하는 것으로 보임
+alias smf
+
+# 표현된 선형회귀에서 기울기(balance), y 절편(intercept)를 구해준다.
+
+# lm은 linear model로 추정되며, fit을 통해 일종에 할당되고, parmas를 통해 필요한 값들 전달받음
+In [41]:
+lm = smf.ols(formula='default_Yes ~ balance', data=Default_enc)
+lm_learned = lm.fit()
+lm_learned.params
+Out[41]:
+Intercept   -0.075192
+balance      0.000130
+dtype: float64 
+
++알파
+기울기가 아주 작지만 결국 음수가 아닌 양수이다. 즉 잔고가 많을 수록 채무불이행율이 높아진다. 혹은 비례한다.
+이를 해석하자면,
+월급쟁이보단 사업자들 데이터라 큰 잔고에는 한편으로 큰 리스크가 있다고 해석할 수 있다.
+
+참고로 내가한 예제에서는 독립변수에 balance(잔고)가 있고 아래의 special_balance는 채무불이행율이 10프로(threshold)일때의 잔고를 추론하는 과정임
+In [49]:
+# threshold를 주어진 어림곡선의 형태에 따라 0.1로 설정할때, default_Yes=0.1에 대응하는 balance를 구하자
+special_balance = (0.1 - lm_learned.params.Intercept) / lm_learned.params.balance 
+special_balance
+Out[49]:
+1342.2212239908708
+
+--------
+numpy : 간단하게는 행렬화 라이브러리이고, 판다스처럼 그리고 SQL Query의 where에 대응하는듯
+alias np
+
+
+# classified란 새로운 칼럼을 추가하면서 위의 연산을 통해 채무불이행율이 10프로 초과인 row면 1 아니면 0 할당
+Default_enc['classified']=np.where(Default_enc['balance']>special_balance, 1, 0)
+Default_enc.head()
+
+# 정확한 그림은 
+https://github.com/aidsfintech/aidsfintech/blob/main/DataScience/LinearRegression/UtilizingLinear_Regression.ipynb
+참고
+sns.pairplot(data=Default_enc, x_vars=['balance','classified'], y_vars=['default_Yes'], height=6, aspect=0.8, kind='reg')
+
+classified를 독립변수로 잡는다라는 것 조금 어색하다. 왜냐하면 이결과 자체가 defalut_Yes와 같은 balance의 종속변수값이니까,
+하지만 단순히 코딩 문법상 '비교'를 위해서 위와같이 기입하면
+
+채무이행자로 분류 시, 실제론 채무이행을 한 경우_좌 하 점들_과 채무이행을 안한 경우_그래프상 좌 상 점들_
+채무불이행자로 분류 시, 실제론 채무이해을 한 경우_우 하 점들_과 채무불이행을 한경우_우 상_
+
+(default_Yes라는 진실에 따라 classfied가 비례하는 상황, 즉 y=x위의 점들은 정확성에 기여하나,
+그 외 점들은 오류)
+
+
+--------statsmodel.fomula.api ; smf로 Linear Model를 만들었고 만들 수 있음을 확인한 상태
+학습용과 테스트용을 분할한다.
+전체 데이터는 10000개이다. 단순히 생각하면 여기서 그냥 7000개, 3000개 빼면 될것같으나,
+
+우리가 지금 학습하고 분석하려는 추가 속성 ;  채무불이행과 그렇지 않은 성질 이 있다.
+
+즉, 학습용과 테스트용/채무불이행과 그렇지 않은것으로
+총 2*2 테이블이 생긴다.
+
+학습 시 편향된 데이터로 하면 안되기때문에 
+Encoded_source에서, 우선 채무불이행인 집단과 그렇지 않은 집단을 분리시킨다.
+DefaultNo_set=Default_enc.query('default_Yes==0')
+DefaultYes_set=Default_enc.query('default_Yes==1')
+
+그 다음, 
+채무이행인 것들 중 70프로와 그렇지 않은 것 30프로
+채무불이행인 것들 중 70프로와 그렇지 않은 것 30프로
+
+70프로 집단으로 학습셋 만들고, 
+Training_set=pd.concat([DefaultNo_set[0:6767],DefaultYes_set[0:233]],ignore_index=True)
+
+남은 걸로 테스트셋을 만들어야한다.
+Testing_set=pd.concat([DefaultNo_set[6767:],DefaultYes_set[233:]],ignore_index=True)
+
+-학습셋을 바타응로 smf.ols로 Linear Model 만들기
+lm = smf.ols(formula='default_Yes ~ balance', data=Training_set)
+lm_learned = lm.fit()
+
+앞서 과정과 똑같이, 알고싶은 채무불이행자의 확률을 정하는데 이번에는 0.1(10프로)가 아닌 0.2로 진행
+즉, 현재 linear model을 채무불이행 확률이 20프로인 집단과 그렇지 않은 집단으로 분석해보는것
+
+# threshold를 0.2로 할때, 즉 default_Yes=0.2에 대응하는 balance를 구하자
+special_balance = (0.2 - lm_learned.params.Intercept) / lm_learned.params.balance 
+Training_set['classified']=np.where(Training_set['balance']>special_balance, 1, 0)
+Training_set.head()
+
+# 학습하기 ; training set
+# 기준: Accuracy 전체에서 True positive + True negative를 전체 데이터갯수로 나눈것.
+(Training_set.default_Yes == Training_set.classified).mean()
+# 진실_True로서 기준이 되는 training set의 default_yes 칼럼과 classified 칼럼이 일치하고 이를 전체 갯수로 나누는것
+기본적으로 트레이닝셋 7000개 내부에서의 일이다.
+
+# 평가하기 ; testing set
+(Testing_set.default_Yes == Testing_set.classified).mean()
+
+
+---------
+from sklearn import metrics ; confusion matrix를 통해 accuracy 외에도 다른 관점의 평가를 지원한다.
+
+In [63]:
+from sklearn import metrics
+In [64]:
+conf_mat = metrics.confusion_matrix(Training_set.default_Yes, Training_set.classified) 
+print(conf_mat)
+[[6759    8]
+ [ 198   35]]
+
+다 합치면 7000 왜냐하면 학습 트레이닝 셋에서 default_Yes와 classifed 칼럼으로 confusion matrix를 만든거다
+default_Yes가 1 일때 classifed도 1 ; 6759
+default_Yes가 1 일때 classifed는 0 ; 8
+default_Yes가 0 일때 classifed도 1 ; 198
+default_Yes가 0 일때 classifed는 0 ; 35
+
+그러므로 
+
+Accuracy 97.05% ; 예측이 맞은 비율
+In [65]:
+(conf_mat[0,0] + conf_mat[1,1]) /conf_mat.sum()   # confusion matrix에서 Accuracy 계산
+Out[65]:
+0.9705714285714285
