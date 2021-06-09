@@ -21,6 +21,8 @@ keras
 # Explanation of Data
 
 train_captions.txt
+
+
 ex) key, desc : 사진명, 캡션
 1000268201_693b08cb0e.jpg,A child in a pink dress is climbing up a set of stairs in an entry way .
 1000268201_693b08cb0e.jpg,A girl going into a wooden building .
