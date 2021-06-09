@@ -20,7 +20,7 @@ keras
 
 # Explanation of Data
 
-train_captions.txt
+1.train_captions.txt
 
 
 ex) key, desc : 사진명, 캡션
@@ -34,7 +34,7 @@ ex) key, desc : 사진명, 캡션
 1000268201_693b08cb0e.jpg,A little girl climbing the stairs to
 
 
-Images 폴더
+2.Images 폴더
 
 위 키값에 대응하는 .jpg 이미지들
 
