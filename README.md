@@ -1,5 +1,5 @@
-## from A.I to datascience and Fintech
-머신러닝을 포괄하는 A.I.를 데이타사이언스, 핀테크로 활용해 나겠다는 포부
+## from A.I. to datascience and Fintech
+ Apply A.I. including ML to DataScience, Fintech
 
 # A.I.
 CNN, RNN와 같은 이미지나 텍스트 처리 등의 머신러닝 공부
