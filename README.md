@@ -1,5 +1,5 @@
-## from A.I. to datascience and Fintech
- Apply A.I. including ML to DataScience, Fintech
+## from A.I. to datascience, Fintech, IT service
+ Apply A.I. including ML to DataScience, Fintech, futhermore IT service
 
 # A.I.
 CNN, RNN와 같은 이미지나 텍스트 처리 등의 머신러닝 공부
