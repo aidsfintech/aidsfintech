@@ -16,7 +16,11 @@ Intellij repo
 
 3. django를 통해 구현한 서비스를 api 등의 형태로 연결
 
+aidsfintech
+
 devsacti-django-webservice
 
 
 5. 종합 IT서비스 구현
+
+devops
