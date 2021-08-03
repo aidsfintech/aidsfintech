@@ -14,6 +14,8 @@ devacti-springboot2-webservice repo
 
 Intellij repo
 
+devops chapter 3
+
 3. django를 통해 구현한 서비스를 api 등의 형태로 연결
 
 aidsfintech
