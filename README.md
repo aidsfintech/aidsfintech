@@ -1,5 +1,5 @@
-# i moved from here to https://github.com/devsacti
-# to expand and overcome the boundary
+# i moved from here to https://github.com/devsacti to expand and overcome the boundary
+
 
 ## from A.I. to datascience, Fintech, IT service
  Apply A.I. including ML to DataScience, Fintech, futhermore IT service
